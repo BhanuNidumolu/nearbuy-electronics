@@ -1,0 +1,36 @@
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-nearbuy}
+      MYSQL_USER: ${MYSQL_USER:-nearbuy}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-nearbuy-local-password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root-local-password}
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-nearbuy}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-nearbuy}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-nearbuy-local-password}
+      JWT_SECRET: ${JWT_SECRET:-local-only-change-this-secret-before-deploying-123456}
+      RESERVATION_HOLD_DURATION: ${RESERVATION_HOLD_DURATION:-PT15M}
+      SERVER_PORT: 8080
+    ports:
+      - "8083:8080"
+
+volumes:
+  mysql_data:

@@ -1,0 +1,16 @@
+﻿.env
+.env.*
+!.env.example
+
+**/node_modules/
+**/dist/
+**/target/
+*.log
+.DS_Store
+
+# Local secrets and keys
+*.pem
+*.key
+secrets/
+# Archived database cleanup migrations - never deploy
+backend/src/main/resources/db/migration-archive/
